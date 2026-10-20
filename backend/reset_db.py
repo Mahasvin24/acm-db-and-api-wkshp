@@ -1,6 +1,9 @@
 """Drop all user tables and data. Run from the repo root: python -m backend.reset_db"""
 
-import db_utils as db
+if __package__:
+    from . import db_utils as db
+else:
+    import db_utils as db
 
 
 def reset_db():

@@ -24,9 +24,10 @@ class OllamaTests(unittest.TestCase):
         post.assert_called_once_with(
             OLLAMA_URL,
             json={
-                "model": "gemma3:1b",
+                "model": "qwen2.5:0.5b",
                 "messages": [{"role": m["role"], "content": m["content"]} for m in history],
                 "stream": False,
+                "options": {"num_ctx": 2048, "num_predict": 256},
             },
             timeout=120.0,
         )
@@ -46,6 +47,18 @@ class OllamaTests(unittest.TestCase):
     def test_connection_errors_propagate(self, post):
         with self.assertRaises(httpx.ConnectError):
             chat([{"role": "user", "content": "Hello"}])
+
+    @patch("backend.ollama.httpx.post")
+    def test_empty_or_invalid_replies_are_rejected(self, post):
+        for content in ("", "  ", None):
+            with self.subTest(content=content):
+                post.return_value = httpx.Response(
+                    200,
+                    json={"message": {"content": content}},
+                    request=httpx.Request("POST", OLLAMA_URL),
+                )
+                with self.assertRaises(ValueError):
+                    chat([{"role": "user", "content": "Hello"}])
 
 
 if __name__ == "__main__":

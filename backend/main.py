@@ -1,16 +1,22 @@
 """Run with: python -m uvicorn main:app --reload"""
 
 import sqlite3
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import backend.db_utils as db
+import backend.ollama as ollama
 
 
 @asynccontextmanager
@@ -74,4 +80,27 @@ def post_message(message: MessageCreate):
         if exc.sqlite_errorcode == sqlite3.SQLITE_CONSTRAINT_FOREIGNKEY:
             raise HTTPException(status_code=404, detail="Conversation not found") from exc
         raise
-    return {"conversation_id": conv_id}
+    reply = None
+    if message.role == "user":
+        history = db.get_all_messages(conv_id)
+        try:
+            reply = ollama.chat(history)
+        except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+            status_code = 502
+            explanation = "Ollama could not generate a reply. Check its logs and try again."
+            if isinstance(exc, httpx.TimeoutException):
+                status_code = 504
+                explanation = "Ollama took too long to reply. Try again with a shorter message."
+            elif isinstance(exc, httpx.ConnectError):
+                status_code = 503
+                explanation = "Cannot reach Ollama. Open the Ollama app or run ollama serve."
+            elif isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 404:
+                status_code = 503
+                explanation = f"Download the model first: ollama pull {ollama.DEFAULT_MODEL}"
+            raise HTTPException(
+                status_code=status_code,
+                detail={"message": explanation, "conversation_id": conv_id},
+            ) from exc
+        db.insert_message(conv_id, "assistant", reply)
+
+    return {"conversation_id": conv_id, "reply": reply}
