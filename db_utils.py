@@ -7,19 +7,9 @@ from pathlib import Path
 DB_PATH = Path(__file__).with_name("data.db")
 
 
-def get_connection():
-    """Open the database. The caller is responsible for closing the connection."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
-
-
-def get_cursor(conn):
-    """Get a cursor from an existing connection."""
-    return conn.cursor()
-
-
+"""
+Task #1: Conversations Table
+"""
 def create_conversations_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS conversations (
@@ -29,6 +19,9 @@ def create_conversations_table(cursor):
     """)
 
 
+"""
+Task #2: Messages Table 
+"""
 def create_messages_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS messages (
@@ -40,6 +33,27 @@ def create_messages_table(cursor):
             FOREIGN KEY (conversation_id) REFERENCES conversations(id)
         )
     """)
+
+"""
+Task #3: Get Messages
+"""
+def get_all_messages(conversation_id):
+    """Return a conversation's messages in insertion order, or an empty list."""
+    conn = get_connection()
+    try:
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT * FROM messages WHERE conversation_id = ? ORDER BY id",
+            (conversation_id,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+    finally:
+        conn.close()
+
+
+"""
+Other useful functions implemented for you.
+"""
 
 
 def create_tables():
@@ -54,18 +68,17 @@ def create_tables():
         conn.close()
 
 
-def get_all_messages(conversation_id):
-    """Return a conversation's messages in insertion order, or an empty list."""
-    conn = get_connection()
-    try:
-        cursor = get_cursor(conn)
-        cursor.execute(
-            "SELECT * FROM messages WHERE conversation_id = ? ORDER BY id",
-            (conversation_id,),
-        )
-        return [dict(row) for row in cursor.fetchall()]
-    finally:
-        conn.close()
+def get_connection():
+    """Open the database. The caller is responsible for closing the connection."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
+
+
+def get_cursor(conn):
+    """Get a cursor from an existing connection."""
+    return conn.cursor()
 
 
 def get_all_conversations():
