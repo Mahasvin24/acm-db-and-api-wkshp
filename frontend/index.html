@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fa">
+  <title>Chat Lab · ACM</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/script.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Conversations">
+      <a class="brand" href="/" aria-label="Chat Lab home">
+        <span class="brand-icon" aria-hidden="true">c.</span>
+        <span>chat lab<span class="brand-caption">ACM WORKSHOP</span></span>
+      </a>
+      <button id="new-chat" class="new-chat" type="button"><span aria-hidden="true">＋</span> New conversation</button>
+      <h2 class="section-label">YOUR CONVERSATIONS</h2>
+      <nav id="conversation-list" aria-label="Saved conversations"></nav>
+      <div class="sidebar-footer"><span class="status-dot" aria-hidden="true"></span> Your history, saved locally.</div>
+    </aside>
+
+    <main>
+      <header class="chat-header">
+        <div><p class="eyebrow">A LITTLE SPACE TO EXPLORE</p><h1 id="chat-title">New conversation</h1></div>
+        <a class="api-link" href="/docs" target="_blank" rel="noopener">API docs <span aria-hidden="true">↗</span></a>
+      </header>
+
+      <section id="chat-area" class="chat-area" aria-label="Chat">
+        <div id="empty-state" class="empty-state">
+          <div class="welcome-icon" aria-hidden="true">✳</div>
+          <p class="eyebrow">HELLO, CURIOUS HUMAN</p>
+          <h2>A conversation<br>starts here.</h2>
+          <p>Ask a question. Follow a thought.<br>Build something worth talking about.</p>
+          <div class="suggestions" aria-label="Try a prompt">
+            <button type="button" data-prompt="Explain APIs with an everyday example.">Explain APIs <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="What makes a database useful?">Explore databases <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Give me an idea for a small Python project.">Find a project idea <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+        <div id="messages" class="messages" role="log" aria-label="Messages" aria-live="polite" aria-relevant="additions"></div>
+      </section>
+
+      <div class="composer-area">
+        <p id="error" class="error" role="alert" hidden></p>
+        <form id="message-form" class="composer">
+          <label class="sr-only" for="message-input">Your message</label>
+          <textarea id="message-input" rows="2" placeholder="What's on your mind?" required aria-describedby="input-hint"></textarea>
+          <div class="composer-bottom">
+            <span id="input-hint">Enter to send · Shift + Enter for a new line</span>
+            <button id="send" type="submit" aria-label="Send message" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>
+            </button>
+          </div>
+        </form>
+        <p id="status" class="mode-note" role="status">Messages are saved to SQLite. AI replies aren't connected yet.</p>
+        <noscript><p class="error">Enable JavaScript to use the chat.</p></noscript>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
