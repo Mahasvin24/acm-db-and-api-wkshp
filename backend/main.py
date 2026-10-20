@@ -2,9 +2,12 @@
 
 import sqlite3
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import backend.db_utils as db
@@ -17,6 +20,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ACM Chat API", lifespan=lifespan)
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 class MessageCreate(BaseModel):
