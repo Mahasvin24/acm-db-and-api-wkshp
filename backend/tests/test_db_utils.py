@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import db_utils
+import backend.db_utils as db_utils
 
 
 class DatabaseTests(unittest.TestCase):

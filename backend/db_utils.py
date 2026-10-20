@@ -1,4 +1,4 @@
-"""Small SQLite helpers for the workshop. Call create_tables() before use."""
+# db_utils.py
 
 import sqlite3
 from pathlib import Path
@@ -52,7 +52,7 @@ def get_all_messages(conversation_id):
 
 
 """
-Other useful functions implemented for you.
+Other useful functions implemented for you:
 """
 
 
