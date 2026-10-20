@@ -11,13 +11,17 @@ const statusNote = document.querySelector("#status");
 
 let conversationId = -1;
 let busy = false;
-const defaultStatus = "Messages are saved to SQLite. AI replies aren't connected yet.";
+const defaultStatus = "Local AI · Your conversations are saved on this computer.";
 
 async function api(path, options = {}) {
   const response = await fetch(path, options);
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(typeof error.detail === "string" ? error.detail : `Request failed (${response.status}).`);
+    const body = await response.json().catch(() => ({}));
+    const detail = body.detail;
+    const error = new Error(typeof detail === "string"
+      ? detail : detail?.message || `Request failed (${response.status}).`);
+    error.conversationId = detail?.conversation_id;
+    throw error;
   }
   return response.json();
 }
@@ -143,6 +147,7 @@ form.addEventListener("submit", async (event) => {
   if (busy || !content) return;
   showError();
   setBusy(true);
+  statusNote.textContent = "Waiting for a reply…";
   let saved = false;
   try {
     const result = await api("/messages", {
@@ -156,9 +161,21 @@ form.addEventListener("submit", async (event) => {
     await loadMessages(conversationId);
     await loadConversations();
   } catch (error) {
-    showError(saved
-      ? "Your message was saved, but history couldn't refresh. Reload the page to try again."
-      : `Couldn't send your message. ${error.message}`);
+    if (error.conversationId !== undefined) {
+      conversationId = error.conversationId;
+      input.value = "";
+      try {
+        await loadMessages(conversationId);
+        await loadConversations();
+        showError(`${error.message} Your message was saved. Once fixed, send another message to continue.`);
+      } catch {
+        showError(`${error.message} Your message was saved. Reload to view your history.`);
+      }
+    } else {
+      showError(saved
+        ? "Your message was saved, but history couldn't refresh. Reload the page to try again."
+        : `Couldn't send your message. ${error.message}`);
+    }
   } finally {
     setBusy(false);
     input.focus();
