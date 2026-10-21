@@ -48,10 +48,7 @@ GET /conversations
 Should return a list of all the different conversations.
 Note that this is different from the actual sent messages.
 """
-@app.get("/conversations")
-def get_conversations():
-    """List all conversations."""
-    return db.get_all_conversations()
+# code goes here
 
 """
 Task #5
@@ -59,10 +56,7 @@ GET /conversations/conversation_id/messages
 This should return an array of all the messages
 for the conversation with id "conversation_id"
 """
-@app.get("/conversations/{conversation_id}/messages")
-def get_messages(conversation_id: int):
-    """List messages in order. Returns [] if the conversation does not exist."""
-    return db.get_all_messages(conversation_id)
+# code goes here
 
 """
 Task #6
@@ -74,20 +68,19 @@ for the conversation with id "conversation_id".
 def post_message(message: MessageCreate):
     """Save a message. Use conv_id=-1 to start a new conversation."""
     try:
-        conv_id = db.insert_message(
-            message.conv_id, message.role, message.content
-        )
+        ... # code goes here
     except sqlite3.IntegrityError as exc:
         if exc.sqlite_errorcode == sqlite3.SQLITE_CONSTRAINT_FOREIGNKEY:
             raise HTTPException(status_code=404, detail="Conversation not found") from exc
         raise
     reply = None
     if message.role == "user":
-        history = db.get_all_messages(conv_id)
+        history = ... # code goes here
         try:
             reply = ollama.chat(history)
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
             raise_ollama_error(exc, conv_id)
-        db.insert_message(conv_id, "assistant", reply)
+        
+        # code goes here
 
     return {"conversation_id": conv_id, "reply": reply}
