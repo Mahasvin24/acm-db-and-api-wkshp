@@ -12,10 +12,7 @@ Task #1: Conversations Table
 """
 def create_conversations_table(cursor):
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS conversations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
+        ???
     """)
 
 
@@ -24,14 +21,7 @@ Task #2: Messages Table
 """
 def create_messages_table(cursor):
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            conversation_id INTEGER NOT NULL,
-            role TEXT NOT NULL,
-            content TEXT NOT NULL,
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (conversation_id) REFERENCES conversations(id)
-        )
+        ???
     """)
 
 """
@@ -43,8 +33,7 @@ def get_all_messages(conversation_id):
     try:
         cursor = get_cursor(conn)
         cursor.execute(
-            "SELECT * FROM messages WHERE conversation_id = ? ORDER BY id",
-            (conversation_id,),
+            "???"
         )
         return [dict(row) for row in cursor.fetchall()]
     finally:

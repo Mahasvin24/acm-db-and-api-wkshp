@@ -17,6 +17,7 @@ if not __package__:
 
 import backend.db_utils as db
 import backend.ollama as ollama
+from backend.api_errors import raise_ollama_error
 
 
 @asynccontextmanager
@@ -86,21 +87,7 @@ def post_message(message: MessageCreate):
         try:
             reply = ollama.chat(history)
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
-            status_code = 502
-            explanation = "Ollama could not generate a reply. Check its logs and try again."
-            if isinstance(exc, httpx.TimeoutException):
-                status_code = 504
-                explanation = "Ollama took too long to reply. Try again with a shorter message."
-            elif isinstance(exc, httpx.ConnectError):
-                status_code = 503
-                explanation = "Cannot reach Ollama. Open the Ollama app or run ollama serve."
-            elif isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 404:
-                status_code = 503
-                explanation = f"Download the model first: ollama pull {ollama.DEFAULT_MODEL}"
-            raise HTTPException(
-                status_code=status_code,
-                detail={"message": explanation, "conversation_id": conv_id},
-            ) from exc
+            raise_ollama_error(exc, conv_id)
         db.insert_message(conv_id, "assistant", reply)
 
     return {"conversation_id": conv_id, "reply": reply}

@@ -87,19 +87,32 @@ class ApiTests(unittest.TestCase):
         missing_model = httpx.HTTPStatusError(
             "model not found", request=request, response=httpx.Response(404, request=request)
         )
-        for error, status in (
-            (httpx.ConnectError("offline"), 503),
-            (httpx.ReadTimeout("slow"), 504),
-            (missing_model, 503),
-            (httpx.ReadError("connection lost"), 502),
-            (ValueError("invalid JSON"), 502),
+        server_error = httpx.HTTPStatusError(
+            "server error", request=request, response=httpx.Response(500, request=request)
+        )
+        generic_message = "Ollama could not generate a reply. Check its logs and try again."
+        for error, status, explanation in (
+            (
+                httpx.ConnectError("offline"), 503,
+                "Cannot reach Ollama. Open the Ollama app or run ollama serve.",
+            ),
+            (
+                httpx.ReadTimeout("slow"), 504,
+                "Ollama took too long to reply. Try again with a shorter message.",
+            ),
+            (missing_model, 503, "Download the model first: ollama pull qwen2.5:0.5b"),
+            (server_error, 502, generic_message),
+            (httpx.ReadError("connection lost"), 502, generic_message),
+            (ValueError("invalid JSON"), 502, generic_message),
+            (KeyError("message"), 502, generic_message),
+            (TypeError("invalid response"), 502, generic_message),
         ):
             with self.subTest(error=type(error).__name__):
                 self.chat.side_effect = error
                 response = self.client.post("/messages", json={"content": "Hello"})
                 self.assertEqual(response.status_code, status)
                 detail = response.json()["detail"]
-                self.assertTrue(detail["message"])
+                self.assertEqual(detail["message"], explanation)
                 history = self.client.get(f'/conversations/{detail["conversation_id"]}/messages').json()
                 self.assertEqual([m["content"] for m in history], ["Hello"])
                 self.assertEqual(history[0]["role"], "user")
